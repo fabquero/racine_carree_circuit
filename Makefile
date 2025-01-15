@@ -1,6 +1,6 @@
 utils := math_utils.vhd
 b_src := $(utils) racinecarre.vhd racinecarre_tb.vhd
-s_src := $(utils) sequential_sqrt.vhd
+s_src := $(utils) data_register.vhd sequential_sqrt.vhd
 
 b_com: $(b_src)
 	vcom $(b_src);
