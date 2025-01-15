@@ -1,12 +1,8 @@
-utils := math_utils.vhd
-b_src := $(utils) racinecarre.vhd racinecarre_tb.vhd
-s_src := $(utils) data_register.vhd sequential_sqrt.vhd
+utils:=math_utils.vhd
+src:=$(utils) data_register.vhd control_unit.vhd sequential_sqrt.vhd
 
-b_com: $(b_src)
-	vcom $(b_src);
-
-s_com: $(s_src)
-	vcom $(s_src)
+com: $(src)
+	vcom $(src)
 
 sim: com
 	vsim -c -do;
@@ -19,3 +15,5 @@ clean:
 
 work:
 	vlib work
+
+.PHONY: clean, work, sim, sim-gui

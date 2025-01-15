@@ -2,9 +2,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library work;
-use work.math_utils.all;
-
 entity sequential_sqrt is
 	generic(n_bits: natural);
 	port(
@@ -50,7 +47,7 @@ architecture structural of sequential_sqrt is
 
 	-- dataflow control state machine
 	component control_unit
-		generic(ctr_bits, ctr_init: natural);
+		generic(n_bits: natural);
 		port(
 			clk, rst, start : in  std_logic; -- top inputs
 			done            : out std_logic; -- top outputs
@@ -93,7 +90,7 @@ begin
 
 	-- control unit ------------------------------------------------------------
 	cu : control_unit
-		generic map(ctr_bits => clog2(n_bits), ctr_init => n_bits)
+		generic map(n_bits => n_bits)
 		port    map(
 					clk => clk, rst => rst, start => start, done => done,
 					reg_rst => reg_rst, reg_ena => reg_ena
