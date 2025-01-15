@@ -1,7 +1,12 @@
-src := racinecarre.vhd racinecarre_tb.vhd
+utils := math_utils.vhd
+b_src := $(utils) racinecarre.vhd racinecarre_tb.vhd
+s_src := $(utils) sequential_sqrt.vhd
 
-com: $(src)
-	vcom $(src);
+b_com: $(b_src)
+	vcom $(b_src);
+
+s_com: $(s_src)
+	vcom $(s_src)
 
 sim: com
 	vsim -c -do;
