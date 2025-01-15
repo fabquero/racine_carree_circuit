@@ -2,12 +2,12 @@ library ieee;
 use ieee.math_real.all;
 
 package math_utils is
-	function clog2(n: integer) return integer;
+	function clog2(n: natural) return natural;
 end package;
 
 package body math_utils is
-	function clog2(n: integer) return integer is
+	function clog2(n: natural) return natural is
 	begin
-		return integer(ceil(log2(real(n))));
+		return natural(ceil(log2(real(n))));
 	end function;
 end package body;
