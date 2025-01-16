@@ -22,7 +22,7 @@ architecture structural of shift_register is
     signal ff_in, ff_out: std_logic_vector(n_bits - 1 downto 0);
 begin
     -- input
-    ff_in <= D when ena = '1' else (others => '0');
+    ff_in <= D when ena = '1' else ff_out(n_bits - 2 downto 0) & '0';
 
     -- flip flops
     ffs : for i in 0 to n_bits - 1 generate
