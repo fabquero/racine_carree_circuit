@@ -8,6 +8,6 @@ end package;
 package body math_utils is
 	function clog2(n: natural) return natural is
 	begin
-		return natural(ceil(log2(real(n))));
+		return natural(floor(log2(real(n))))+1;
 	end function;
 end package body;
