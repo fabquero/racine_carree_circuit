@@ -1,5 +1,5 @@
 utils:=math_utils.vhd
-src:=$(utils) data_register.vhd control_unit.vhd sequential_sqrt.vhd
+src:=$(utils) d_flip_flop.vhd data_register.vhd control_unit.vhd sequential_sqrt.vhd
 
 com: $(src)
 	vcom $(src)
