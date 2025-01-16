@@ -33,20 +33,3 @@ begin
     -- output
     Q <= ff_out;
 end architecture;
-
-architecture behavioral of data_register is
-    signal R: std_logic_vector(n_bits - 1 downto 0);
-begin
-    Q <= R;
-
-    process(clk, rst) is
-    begin
-        if rst = '1' then
-            R <= (others => '0');
-        else
-            if rising_edge(clk) and ena = '1' then
-                R <= D;
-            end if;
-        end if;
-    end process;
-end architecture;
