@@ -1,18 +1,27 @@
-utils := math_utils.vhd
-b_src := $(utils) racinecarre.vhd racinecarre_tb.vhd
-s_src := $(utils) sequential_sqrt.vhd
+# fichier de package
+PACKAGES_FILES := math_PACKAGES_FILES.vhd
+# fichier comportemental
+SOURCES := $(PACKAGES_FILES) racinecarree.vhd racinecarre_tb.vhd
 
-b_com: $(b_src)
-	vcom $(b_src);
+# nom du testbench utilise
+TESTBENCH := racinecarre_tb
+TIME ?= -all
 
-s_com: $(s_src)
-	vcom $(s_src)
+com: $(SOURCES)
+	vcom $(SOURCES);
 
+# lance une simulation en mode console
 sim: com
-	vsim -c -do;
+	vsim $(TESTBENCH) -c -do "run -all;";
 
+# lance une simulation en mode gui
+# commande : make sim-gui [TIME=TempsUnite]; exemple: make sim-gui TIME=100us
 sim-gui: com
-	vsim -do;
+	@if [ -z "$(TIME)" ]; then \
+		vsim $(TESTBENCH) -do "add wave *; add wave sim:/racinecarre_tb/racinecarree/*; run -all;"; \
+	else \
+		vsim $(TESTBENCH) -do "add wave *; add wave sim:/racinecarre_tb/racinecarree/*; run $(TIME) ns;"; \
+	fi
 
 clean:
 	rm -rf work transcript vsim.wlf
