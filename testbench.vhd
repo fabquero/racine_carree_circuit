@@ -103,7 +103,7 @@ architecture bit_adder_tb of testbench is
         );
     end component;
 
-    procedure test_adder(
+    procedure test(
             constant input_a, input_b, input_c, expected_d, expected_carry: in std_logic;
             signal a, b, c: out std_logic;
             signal d, carry: in std_logic
@@ -127,17 +127,98 @@ begin
 
     main : process
     begin
-        test_adder('0', '0', '0', '0', '0', a, b, c, d, carry);
+        test('0', '0', '0', '0', '0', a, b, c, d, carry);
 
-        test_adder('1', '0', '0', '1', '0', a, b, c, d, carry);
-        test_adder('0', '1', '0', '1', '0', a, b, c, d, carry);
-        test_adder('0', '0', '1', '1', '0', a, b, c, d, carry);
+        test('1', '0', '0', '1', '0', a, b, c, d, carry);
+        test('0', '1', '0', '1', '0', a, b, c, d, carry);
+        test('0', '0', '1', '1', '0', a, b, c, d, carry);
 
-        test_adder('1', '0', '1', '0', '1', a, b, c, d, carry);
-        test_adder('1', '1', '0', '0', '1', a, b, c, d, carry);
-        test_adder('0', '1', '1', '0', '1', a, b, c, d, carry);
+        test('1', '0', '1', '0', '1', a, b, c, d, carry);
+        test('1', '1', '0', '0', '1', a, b, c, d, carry);
+        test('0', '1', '1', '0', '1', a, b, c, d, carry);
 
-        test_adder('1', '1', '1', '1', '1', a, b, c, d, carry);
+        test('1', '1', '1', '1', '1', a, b, c, d, carry);
+
+        report "Test: ok" severity failure;
+    end process;
+end architecture;
+
+-- tests signed adder using all combinations of 3-bit inputs
+architecture signed_adder_tb of testbench is
+    constant period: time := 20 ns;
+    signal A, B, SUM: std_logic_vector(2 downto 0);
+    signal OVF: std_logic;
+
+    component signed_adder
+        generic(n_bits: natural);
+        port(
+            A, B: in  std_logic_vector(n_bits - 1 downto 0); -- inputs, signed
+            SUM : out std_logic_vector(n_bits - 1 downto 0); -- output sum
+            OVF : out std_logic -- overflow flag
+        );
+    end component;
+
+    function to_string(vec: std_logic_vector) return string is
+        variable res: string(1 to vec'length);
+    begin
+        for i in vec'range loop
+            if vec(i) = '1' then
+                res(vec'length - i) := '1';
+            else
+                res(vec'length - i) := '0';
+            end if;
+        end loop;
+        return res;
+    end function;
+
+    procedure test(
+        constant A_val, B_val, SUM_val: in std_logic_vector(2 downto 0);
+        constant OVF_val              : in std_logic;
+
+        signal A_sig, B_sig: out std_logic_vector(2 downto 0);
+        signal SUM_sig     : in  std_logic_vector(2 downto 0);
+        signal OVF_sig     : in  std_logic
+    ) is
+    begin
+        A_sig <= A_val;
+        B_sig <= B_val;
+        wait for period;
+        assert (SUM_sig = SUM_val) and (OVF_sig = OVF_val)
+            report "wrong result: ("
+                & to_string(A_val) & ","
+                & to_string(B_val) & ") => ("
+                & to_string(SUM_sig) & ","
+                & std_logic'image(OVF_sig) & ")"
+            severity error;
+    end procedure;
+begin
+    adder : signed_adder
+        generic map(n_bits => 3)
+        port map(A => A, B => B, SUM => SUM, OVF => OVF);
+
+    main : process
+    begin
+        -- unsigned additions
+        test("000", "000", "000", '0', A, B, SUM, OVF);
+        test("001", "000", "001", '0', A, B, SUM, OVF);
+        test("000", "001", "001", '0', A, B, SUM, OVF);
+        test("010", "001", "011", '0', A, B, SUM, OVF);
+
+        -- unsigned addition overflow
+        test("011", "001", "100", '1', A, B, SUM, OVF);
+        test("011", "011", "110", '1', A, B, SUM, OVF);
+
+        -- substractions
+        test("000", "100", "100", '0', A, B, SUM, OVF);
+        test("001", "100", "101", '0', A, B, SUM, OVF);
+        test("111", "011", "010", '0', A, B, SUM, OVF);
+        test("100", "001", "101", '0', A, B, SUM, OVF);
+        test("011", "111", "010", '0', A, B, SUM, OVF);
+
+        -- negativee overflow
+        test("111", "100", "011", '1', A, B, SUM, OVF);
+        test("100", "111", "011", '1', A, B, SUM, OVF);
+
 
         report "Test: ok" severity failure;
     end process;

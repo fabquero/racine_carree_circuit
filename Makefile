@@ -1,7 +1,7 @@
 utils:=math_utils.vhd
-src:=$(utils) bit_adder.vhd d_flip_flop.vhd data_register.vhd shift_register.vhd control_unit.vhd sequential_sqrt.vhd
+src:=$(utils) bit_adder.vhd signed_adder.vhd d_flip_flop.vhd data_register.vhd shift_register.vhd control_unit.vhd sequential_sqrt.vhd
 tb:=testbench
-uut:=bit_adder
+uut:=signed_adder
 time?=-all
 
 com: $(src)
