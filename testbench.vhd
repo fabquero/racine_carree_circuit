@@ -64,6 +64,14 @@ begin
 end architecture;
 
 architecture cu_tb of testbench is
+    constant period: time := 20 ns;
+
+    signal clk    : std_logic := '0';
+    signal rst    : std_logic := '0';
+    signal start  : std_logic := '0';
+    signal done   : std_logic;
+    signal reg_rst: std_logic;
+    signal reg_ena: std_logic;
 
     component control_unit
         generic(n_bits: natural);
@@ -74,5 +82,63 @@ architecture cu_tb of testbench is
         );
     end component;
 begin
+    -- clock
+    clk_gen : process
+    begin
+        clk <= '0';
+        wait for period / 2;
+        clk <= '1';
+        wait for period / 2;
+    end process;
+end architecture;
 
+architecture bit_adder_tb of testbench is
+    constant period: time := 20 ns;
+    signal a, b, c, d, carry: std_logic;
+
+    component bit_adder
+        port(
+            a, b, c: in std_logic;
+            d, carry: out std_logic
+        );
+    end component;
+
+    procedure test_adder(
+            constant input_a, input_b, input_c, expected_d, expected_carry: in std_logic;
+            signal a, b, c: out std_logic;
+            signal d, carry: in std_logic
+        ) is
+    begin
+        a <= input_a;
+        b <= input_b;
+        c <= input_c;
+        wait for period;
+        assert (d = expected_d and carry = expected_carry)
+            report "wrong result: ("
+                & std_logic'image(input_a) & ","
+                & std_logic'image(input_b) & ","
+                & std_logic'image(input_c) & ") => ("
+                & std_logic'image(d) & ","
+                & std_logic'image(carry) & ")"
+            severity error;
+    end procedure;
+begin
+    adder : bit_adder port map(a => a, b => b, c => c, d => d, carry => carry);
+
+    main : process
+    begin
+        test_adder('0', '0', '0', '0', '0', a, b, c, d, carry);
+
+        test_adder('1', '0', '0', '1', '0', a, b, c, d, carry);
+        test_adder('0', '1', '0', '1', '0', a, b, c, d, carry);
+        test_adder('0', '0', '1', '1', '0', a, b, c, d, carry);
+
+        test_adder('1', '0', '1', '0', '1', a, b, c, d, carry);
+        test_adder('1', '1', '0', '0', '1', a, b, c, d, carry);
+        test_adder('0', '1', '1', '0', '1', a, b, c, d, carry);
+
+        test_adder('1', '1', '1', '1', '1', a, b, c, d, carry);
+
+        report "Test: ok" severity failure;
+    end process;
 end architecture;

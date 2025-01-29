@@ -1,7 +1,7 @@
 utils:=math_utils.vhd
-src:=$(utils) d_flip_flop.vhd data_register.vhd shift_register.vhd control_unit.vhd sequential_sqrt.vhd
+src:=$(utils) bit_adder.vhd d_flip_flop.vhd data_register.vhd shift_register.vhd control_unit.vhd sequential_sqrt.vhd
 tb:=testbench
-uut:=reg
+uut:=bit_adder
 time?=-all
 
 com: $(src)
@@ -11,7 +11,7 @@ tb: com
 	vcom $(tb).vhd
 
 sim: tb
-	vsim $(tb) -c -do "vsim work.$(tb)($(uut)_tb); run -all";
+	vsim $(tb) -c -do "vsim work.$(tb)($(uut)_tb); run -all; quit";
 
 sim-gui: com
 	vsim $(tb) -do "vsim work.$(tb)($(uut)_tb); add wave *; add wave sim:/$(tb)/$(uut)/*; run $(time);";
@@ -22,4 +22,12 @@ clean:
 work:
 	vlib work
 
-.PHONY: clean, work, sim, sim-gui
+help:
+	@echo "com    : compiles given sources in order"
+	@echo "tb     : compiles testbench sources"
+	@echo "sim    : runs simulation on the unit specified by the uut variable"
+	@echo "sim_gui: displays waveforms on the above test unit in modelsim"
+	@echo "clean  : removes compilation output"
+	@echo "work   : initializes working library"
+
+.PHONY: clean, work, sim, sim-gui, help
