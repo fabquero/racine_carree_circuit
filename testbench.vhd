@@ -2,18 +2,18 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library work;
+use work.utils.all;
+
 entity testbench is
 end entity;
 
-architecture reg_tb of testbench is
+architecture data_register_tb of testbench is
     constant n_bits: natural := 4;
     constant period: time := 20 ns;
 
-    signal clk: std_logic := '0';
-    signal rst: std_logic := '0';
-    signal ena: std_logic := '0';
-    signal D: std_logic_vector(n_bits - 1 downto 0);
-    signal Q: std_logic_vector(n_bits - 1 downto 0);
+    signal clk, rst, ena: std_logic;
+    signal D, Q: std_logic_vector(n_bits - 1 downto 0);
 
     component data_register
         generic(n_bits: natural);
@@ -35,11 +35,14 @@ begin
 
     -- unit under test
     reg : data_register
-    generic map(n_bits => n_bits)
-    port map(clk => clk, rst => rst, ena => ena, D => D, Q => Q);
+        generic map(n_bits => n_bits)
+        port map(clk => clk, rst => rst, ena => ena, D => D, Q => Q);
 
     main : process
     begin
+        rst <= '0';
+        ena <= '0';
+
         rst <= '1';
         wait for period;
         assert (Q = (n_bits - 1 downto 0 => '0')) report "wrong Q value during reset" severity error;
@@ -63,7 +66,100 @@ begin
     end process;
 end architecture;
 
-architecture cu_tb of testbench is
+architecture shift_register_tb of testbench is
+    constant period: time := 20 ns;
+    constant n_bits: natural := 4;
+
+    signal clk, rst, ena, Q: std_logic;
+    signal D: std_logic_vector(n_bits - 1 downto 0);
+
+    component shift_register
+        generic(n_bits: natural);
+        port(
+            clk, rst, ena: in std_logic;
+            Q: out std_logic;
+            D: in  std_logic_vector(n_bits - 1 downto 0)
+        );
+    end component;
+
+    procedure test(
+            constant delay: in natural;
+
+            signal   D_sig: out std_logic_vector(4 - 1 downto 0);
+            constant D_val: in  std_logic_vector(4 - 1 downto 0);
+
+            signal   rst_sig: out std_logic;
+            constant rst_val: in  std_logic;
+
+            signal   ena_sig: out std_logic;
+            constant ena_val: in  std_logic;
+            
+            signal   Q_sig: in std_logic;
+            constant Q_val: in std_logic
+        ) is
+    begin
+        rst_sig <= rst_val;
+        ena_sig <= ena_val;
+        D_sig <= D_val;
+        wait for period;
+        rst_sig <= '0';
+        ena_sig <= '0';
+        wait for (delay - 1) * period;
+
+        assert (Q_sig = Q_val)
+            report "wrong output: ("
+                & to_string(D_val) & ","
+                & std_logic'image(rst_val) & ","
+                & std_logic'image(ena_val) & ") => "
+                & std_logic'image(Q_sig) & " != "
+                & std_logic'image(Q_val)
+            severity error;
+    end procedure;
+begin
+    shift_reg : shift_register
+        generic map(n_bits => n_bits)
+        port map(clk => clk, rst => rst, ena => ena, D => D, Q => Q);
+
+    clk_gen : process
+    begin
+        clk <= '1';
+        wait for period/2;
+        clk <= '0';
+        wait for period/2;
+    end process;
+
+    main : process
+    begin
+        wait for period/2;
+
+        -- reset with different values
+        test(1, D, (n_bits - 1 downto 0 => '0'), rst, '1', ena, '0', Q, '0');
+        test(1, D, (n_bits - 1 downto 0 => '1'), rst, '1', ena, '0', Q, '0');
+        test(1, D, (n_bits - 1 downto 0 => '0'), rst, '1', ena, '1', Q, '0');
+        test(1, D, (n_bits - 1 downto 0 => '1'), rst, '1', ena, '1', Q, '0');
+
+        -- reset with hdifferent delays
+        test(2, D, (n_bits - 1 downto 0 => '1'), rst, '1', ena, '0', Q, '0');
+        test(3, D, (n_bits - 1 downto 0 => '1'), rst, '1', ena, '0', Q, '0');
+        test(4, D, (n_bits - 1 downto 0 => '1'), rst, '1', ena, '0', Q, '0');
+
+        -- ena with different values
+        test(1, D,       (n_bits - 1 downto 0 => '0'), rst, '0', ena, '1', Q, '0');
+        test(1, D, '0' & (n_bits - 2 downto 0 => '1'), rst, '0', ena, '1', Q, '0');
+        test(1, D,       (n_bits - 1 downto 0 => '1'), rst, '0', ena, '1', Q, '1');
+
+        -- ena with different delays
+        test(1, D, (n_bits - 2 downto 0 => '0') & '1', rst, '0', ena, '1', Q, '0');
+        test(2, D, (n_bits - 2 downto 0 => '0') & '1', rst, '0', ena, '1', Q, '0');
+        test(3, D, (n_bits - 2 downto 0 => '0') & '1', rst, '0', ena, '1', Q, '0');
+        test(4, D, (n_bits - 2 downto 0 => '0') & '1', rst, '0', ena, '1', Q, '1');
+        test(5, D, (n_bits - 2 downto 0 => '0') & '1', rst, '0', ena, '1', Q, '0');
+
+        report "Test: ok" severity failure;
+    end process;
+end architecture;
+
+architecture control_unit_tb of testbench is
     constant period: time := 20 ns;
 
     signal clk    : std_logic := '0';
@@ -158,19 +254,6 @@ architecture signed_adder_tb of testbench is
         );
     end component;
 
-    function to_string(vec: std_logic_vector) return string is
-        variable res: string(1 to vec'length);
-    begin
-        for i in vec'range loop
-            if vec(i) = '1' then
-                res(vec'length - i) := '1';
-            else
-                res(vec'length - i) := '0';
-            end if;
-        end loop;
-        return res;
-    end function;
-
     procedure test(
         constant A_val, B_val, SUM_val: in std_logic_vector(2 downto 0);
         constant OVF_val              : in std_logic;
@@ -218,7 +301,6 @@ begin
         -- negativee overflow
         test("111", "100", "011", '1', A, B, SUM, OVF);
         test("100", "111", "011", '1', A, B, SUM, OVF);
-
 
         report "Test: ok" severity failure;
     end process;
