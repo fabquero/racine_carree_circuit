@@ -17,7 +17,7 @@ sim: com
 # lance une simulation en mode gui
 # commande : make sim-gui [TIME=TempsUnite]; exemple: make sim-gui TIME=100us
 sim-gui: com
-	vsim $(TESTBENCH) -do "add wave *; add wave sim:/racinecarre_tb/racinecarree/*; run $(TIME);";
+	vsim $(TESTBENCH) -do "add wave *; add wave sim:/racinecarre_tb/racinecarree/*; add wave sim:/racinecarre_tb/racinecarree/comport/*; run $(TIME);";
 
 clean:
 	rm -rf work transcript vsim.wlf
