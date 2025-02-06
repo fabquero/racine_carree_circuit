@@ -3,3 +3,4 @@ tp_nios_system/*
 !tp_nios_system/DE1_config.qsf
 !tp_nios_system/nios_system.qsys
 !tp_nios_system/top_nios_system.vhd
+!tp_nios_system/*.c
