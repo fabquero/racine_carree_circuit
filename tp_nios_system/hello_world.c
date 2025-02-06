@@ -142,12 +142,13 @@ int main()
 	//unsigned int t2 = alt_timestamp();
 	// max counter is
 	unsigned int max_counter = 0xffffffff;
+	// unsigned int time = t2-t1;
 	// si on a boucle dans le compteur...
 		//if(t1 > t2){
-		//	t2 = t2 + max_counter;
+		//	time = (max_counter-t1)+t2;
 		//}
 	// affiche la valeur du compteur d'intel.
-	//printf("valeur obtenu pour intel: %u", t2-t1);
+	//printf("valeur obtenu pour intel: %u", time);
 
 	// SQUARE ROOT PART
 	uint16_t tabResult[NUMBER_OF_ELEMENTS] = {0};
@@ -162,12 +163,13 @@ int main()
 	unsigned int t2 = my_timestamp();
 
 	// comme c'est un decompteur (decroissant), on doit avoir t1 > t2, sinon on a boucle.
-	//if(t2 > t1){
-	//	t2 =
-	//}
+	unsigned int time = t1-t2;
+	if(t2 > t1){
+		time = t1+(max_counter-t2);
+	}
 
 	//displayArray(modifiedTab,NUMBER_OF_ELEMENTS);
-	printf("value of t1 is %u and t2 is %u, then t1-t2 %u and mean for one value is %u", t1, t2, t1-t2, (t1-t2)/(100*200));
+	printf("value of t1 is %u and t2 is %u, then t1-t2 %u and mean for one value is %u", t1, t2, time, (time)/(100*200));
 
 	while (1) LEDR = SW;
 	return 0;
