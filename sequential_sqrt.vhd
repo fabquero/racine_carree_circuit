@@ -17,13 +17,13 @@ architecture structural of sequential_sqrt is
 	component dataflow
 		generic(n_bits: natural);
 		port(
-			p_D: in  std_logic_vector(2 * n_bits - 1 downto 0);
-			p_R: in  std_logic_vector(3 + n_bits - 1 downto 0);
-			p_Z: in  std_logic_vector(    n_bits - 1 downto 0);
+			D_in : in  std_logic_vector(2 * n_bits - 1 downto 0);
+			R_in : in  std_logic_vector(3 + n_bits - 1 downto 0);
+			Z_in : in  std_logic_vector(    n_bits - 1 downto 0);
 
-			n_D: out std_logic_vector(2 * n_bits - 1 downto 0);
-			n_R: out std_logic_vector(3 + n_bits - 1 downto 0);
-			n_Z: out std_logic_vector(    n_bits - 1 downto 0)
+			D_out: out std_logic_vector(2 * n_bits - 1 downto 0);
+			R_out: out std_logic_vector(3 + n_bits - 1 downto 0);
+			Z_out: out std_logic_vector(    n_bits - 1 downto 0)
 		);
 	end component;
 
@@ -59,8 +59,8 @@ begin
 	df : dataflow
 		generic map(n_bits => n_bits)
 		port    map(
-					p_D => p_D, p_R => p_R, p_Z => p_Z,
-					n_D => n_D, n_R => n_R, n_Z => n_Z
+					D_in => p_D, R_in => p_R, Z_in => p_Z,
+					D_out => n_D, R_out => n_R, Z_out => n_Z
 				);
 
 	-- registers ---------------------------------------------------------------

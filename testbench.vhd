@@ -34,7 +34,7 @@ begin
     end process;
 
     -- unit under test
-    reg : data_register
+    data_register_inst : data_register
         generic map(n_bits => n_bits)
         port map(clk => clk, rst => rst, ena => ena, D => D, Q => Q);
 
@@ -116,7 +116,7 @@ architecture shift_register_tb of testbench is
             severity error;
     end procedure;
 begin
-    shift_reg : shift_register
+    shift_register_inst : shift_register
         generic map(n_bits => n_bits)
         port map(clk => clk, rst => rst, ena => ena, D => D, Q => Q);
 
@@ -219,7 +219,7 @@ architecture bit_adder_tb of testbench is
             severity error;
     end procedure;
 begin
-    adder : bit_adder port map(a => a, b => b, c => c, d => d, carry => carry);
+    bit_adder_inst : bit_adder port map(a => a, b => b, c => c, d => d, carry => carry);
 
     main : process
     begin
@@ -243,64 +243,89 @@ end architecture;
 architecture signed_adder_tb of testbench is
     constant period: time := 20 ns;
     signal A, B, SUM: std_logic_vector(2 downto 0);
-    signal OVF: std_logic;
+    signal OVF, SIG: std_logic;
 
     component signed_adder
         generic(n_bits: natural);
         port(
             A, B: in  std_logic_vector(n_bits - 1 downto 0); -- inputs, signed
             SUM : out std_logic_vector(n_bits - 1 downto 0); -- output sum
-            OVF : out std_logic -- overflow flag
+            SIG : in  std_logic; -- sign-flips B
+            OVF : out std_logic  -- overflow flag
         );
     end component;
 
     procedure test(
-        constant A_val, B_val, SUM_val: in std_logic_vector(2 downto 0);
-        constant OVF_val              : in std_logic;
+        signal   A_sig: out std_logic_vector(2 downto 0);
+        constant A_val: in  std_logic_vector(2 downto 0);
 
-        signal A_sig, B_sig: out std_logic_vector(2 downto 0);
-        signal SUM_sig     : in  std_logic_vector(2 downto 0);
-        signal OVF_sig     : in  std_logic
+        signal   B_sig: out std_logic_vector(2 downto 0);
+        constant B_val: in  std_logic_vector(2 downto 0);
+        
+        signal   SUM_sig: in std_logic_vector(2 downto 0);
+        constant SUM_val: in std_logic_vector(2 downto 0);
+        
+        signal   SIG_sig: out std_logic;
+        constant SIG_val: in  std_logic;
+
+        signal   OVF_sig: in std_logic;
+        constant OVF_val: in std_logic
     ) is
     begin
         A_sig <= A_val;
         B_sig <= B_val;
+        SIG_sig <= SIG_val;
         wait for period;
         assert (SUM_sig = SUM_val) and (OVF_sig = OVF_val)
             report "wrong result: ("
                 & to_string(A_val) & ","
-                & to_string(B_val) & ") => ("
+                & to_string(B_val) & ","
+                & std_logic'image(SIG_val) & ") => ("
                 & to_string(SUM_sig) & ","
-                & std_logic'image(OVF_sig) & ")"
+                & std_logic'image(OVF_sig) & ") != ("
+                & to_string(SUM_val) & ","
+                & std_logic'image(OVF_val) & ")"
             severity error;
     end procedure;
 begin
-    adder : signed_adder
+    signed_adder_inst : signed_adder
         generic map(n_bits => 3)
-        port map(A => A, B => B, SUM => SUM, OVF => OVF);
+        port map(A => A, B => B, SUM => SUM, SIG => SIG, OVF => OVF);
 
     main : process
     begin
         -- unsigned additions
-        test("000", "000", "000", '0', A, B, SUM, OVF);
-        test("001", "000", "001", '0', A, B, SUM, OVF);
-        test("000", "001", "001", '0', A, B, SUM, OVF);
-        test("010", "001", "011", '0', A, B, SUM, OVF);
+        test(A, "000", B, "000", SUM, "000", SIG, '0', OVF, '0');
+        test(A, "001", B, "000", SUM, "001", SIG, '0', OVF, '0');
+        test(A, "000", B, "001", SUM, "001", SIG, '0', OVF, '0');
+        test(A, "010", B, "001", SUM, "011", SIG, '0', OVF, '0');
 
         -- unsigned addition overflow
-        test("011", "001", "100", '1', A, B, SUM, OVF);
-        test("011", "011", "110", '1', A, B, SUM, OVF);
+        test(A, "011", B, "001", SUM, "100", SIG, '0', OVF, '1');
+        test(A, "011", B, "011", SUM, "110", SIG, '0', OVF, '1');
+
+        -- additions with sign-flip
+        test(A, "000", B, "000", SUM, "000", SIG, '1', OVF, '0');
+        test(A, "001", B, "111", SUM, "010", SIG, '1', OVF, '0');
+        test(A, "000", B, "101", SUM, "011", SIG, '1', OVF, '0');
+        test(A, "010", B, "111", SUM, "011", SIG, '1', OVF, '0');
 
         -- substractions
-        test("000", "100", "100", '0', A, B, SUM, OVF);
-        test("001", "100", "101", '0', A, B, SUM, OVF);
-        test("111", "011", "010", '0', A, B, SUM, OVF);
-        test("100", "001", "101", '0', A, B, SUM, OVF);
-        test("011", "111", "010", '0', A, B, SUM, OVF);
+        test(A, "000", B, "100", SUM, "100", SIG, '0', OVF, '0');
+        test(A, "001", B, "100", SUM, "101", SIG, '0', OVF, '0');
+        test(A, "111", B, "011", SUM, "010", SIG, '0', OVF, '0');
+        test(A, "100", B, "001", SUM, "101", SIG, '0', OVF, '0');
+        test(A, "011", B, "111", SUM, "010", SIG, '0', OVF, '0');
 
-        -- negativee overflow
-        test("111", "100", "011", '1', A, B, SUM, OVF);
-        test("100", "111", "011", '1', A, B, SUM, OVF);
+        -- negative overflow
+        test(A, "111", B, "100", SUM, "011", SIG, '0', OVF, '1');
+        test(A, "100", B, "111", SUM, "011", SIG, '0', OVF, '1');
+
+        -- substractions with sign flip
+        test(A, "011", B, "001", SUM, "010", SIG, '1', OVF, '0');
+        test(A, "011", B, "011", SUM, "000", SIG, '1', OVF, '0');
+        test(A, "000", B, "011", SUM, "101", SIG, '1', OVF, '0');
+        test(A, "001", B, "011", SUM, "110", SIG, '1', OVF, '0');
 
         report "Test: ok" severity failure;
     end process;
