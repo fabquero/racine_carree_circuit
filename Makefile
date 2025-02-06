@@ -1,8 +1,13 @@
 utils:=utils.vhd
 src:=$(utils) bit_adder.vhd signed_adder.vhd d_flip_flop.vhd data_register.vhd shift_register.vhd control_unit.vhd sequential_sqrt.vhd
 tb:=testbench
-uut:=shift_register
+uut:=signed_adder
+
 time?=-all
+gui-cmds:=vsim work.$(tb)($(uut)_tb);
+gui-cmds+=add wave -position insertpoint *;
+gui-cmds+=add wave -position insertpoint sim:/$(tb)/$(uut)_inst/*;
+gui-cmds+=run $(time);
 
 com: $(src)
 	vcom $(src)
@@ -14,7 +19,7 @@ sim: tb
 	vsim $(tb) -c -do "vsim work.$(tb)($(uut)_tb); run -all; quit";
 
 sim-gui: com
-	vsim $(tb) -do "vsim work.$(tb)($(uut)_tb); add wave *; add wave sim:/$(tb)/$(uut)/*; run $(time);";
+	vsim $(tb) -do "$(gui-cmds)";
 
 clean:
 	rm -rf work transcript vsim.wlf
