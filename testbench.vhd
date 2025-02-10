@@ -2,6 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library std;
+use std.textio.all;
+
 library work;
 use work.utils.all;
 
@@ -161,13 +164,9 @@ end architecture;
 
 architecture control_unit_tb of testbench is
     constant period: time := 20 ns;
+    constant n_bits: natural := 4;
 
-    signal clk    : std_logic := '0';
-    signal rst    : std_logic := '0';
-    signal start  : std_logic := '0';
-    signal done   : std_logic;
-    signal reg_rst: std_logic;
-    signal reg_ena: std_logic;
+    signal clk, rst, start, done, reg_rst, reg_ena: std_logic;
 
     component control_unit
         generic(n_bits: natural);
@@ -177,7 +176,39 @@ architecture control_unit_tb of testbench is
             reg_rst, reg_ena: out std_logic  -- control outputs
         );
     end component;
+
+    procedure test(
+        constant delay: in natural;
+        constant done_val, reg_rst_val, reg_ena_val: in std_logic;
+        constant message: in string
+    ) is
+        variable result: line;
+    begin
+        wait for delay * period;
+        write(result, "("
+            & std_logic'image(rst) & ","
+            & std_logic'image(start) & ") => ("
+            & std_logic'image(done) & "," 
+            & std_logic'image(reg_rst) & "," 
+            & std_logic'image(reg_ena) & ") != ("
+            & std_logic'image(done_val) & "," 
+            & std_logic'image(reg_rst_val) & "," 
+            & std_logic'image(reg_ena_val) & ")"
+        );
+        assert done = done_val and reg_rst = reg_rst_val and reg_ena = reg_ena_val
+            report message & ": " & result.all
+            severity error;
+    end procedure;
 begin
+    -- uut
+    control_unit_inst : control_unit
+        generic map(n_bits => n_bits)
+        port map(
+            clk => clk, rst => rst, start => start,
+            done => done,
+            reg_rst => reg_rst, reg_ena => reg_ena
+        );
+
     -- clock
     clk_gen : process
     begin
@@ -185,6 +216,30 @@ begin
         wait for period / 2;
         clk <= '1';
         wait for period / 2;
+    end process;
+
+    -- main
+    main : process
+    begin
+        rst <= '1';
+        start <= '0';
+        test(1, '0', '1', '0', "wrong reset values");
+
+        rst <= '0';
+        test(1, '0', '0', '1', "wrong init values");
+
+        start <= '1';
+        test(1, '0', '0', '1', "wrong value during computation (3)");
+        test(1, '0', '0', '1', "wrong value during computation (2)");
+        test(1, '0', '0', '1', "wrong value during computation (1)");
+        test(1, '0', '0', '1', "wrong value during computation (0)");
+        test(1, '1', '0', '0', "wrong value after computation (result)");
+        test(1, '1', '0', '0', "wrong value after computation (hold)");
+
+        start <= '0';
+        test(1, '0', '0', '1', "wrong transition from done_s to init_s");
+
+        report "Test: ok" severity failure;
     end process;
 end architecture;
 
@@ -239,7 +294,6 @@ begin
     end process;
 end architecture;
 
--- tests signed adder using all combinations of 3-bit inputs
 architecture signed_adder_tb of testbench is
     constant period: time := 20 ns;
     signal A, B, SUM: std_logic_vector(2 downto 0);
@@ -326,6 +380,77 @@ begin
         test(A, "011", B, "011", SUM, "000", SIG, '1', OVF, '0');
         test(A, "000", B, "011", SUM, "101", SIG, '1', OVF, '0');
         test(A, "001", B, "011", SUM, "110", SIG, '1', OVF, '0');
+
+        report "Test: ok" severity failure;
+    end process;
+end architecture;
+
+architecture sequential_sqrt_tb of testbench is
+    constant period: time := 20 ns;
+    constant n_bits: natural := 2;
+
+    component sequential_sqrt
+        generic(n_bits: natural);
+        port(
+            clk, rst, start: in  std_logic;
+            done           : out std_logic;
+            data_in        : in  std_logic_vector(2 * n_bits - 1 downto 0);
+            data_out       : out std_logic_vector(    n_bits - 1 downto 0)
+        );
+    end component;
+
+    signal clk, rst, start, done: std_logic;
+    signal data_in : std_logic_vector(2 * n_bits - 1 downto 0);
+    signal data_out: std_logic_vector(    n_bits - 1 downto 0);
+
+    procedure test(
+        signal   start   : out std_logic;
+        signal   data_in : out std_logic_vector(2 * n_bits - 1 downto 0);
+        constant n       : in  natural;
+        signal   data_out: in  std_logic_vector(    n_bits - 1 downto 0);
+        constant e       : in  natural
+    ) is
+        variable r: natural;
+    begin
+        start <= '0';
+        data_in <= std_logic_vector(to_unsigned(n, 2 * n_bits));
+        wait for period;
+        start <= '1';
+        wait until done = '1';
+        r := to_integer(unsigned(data_out));
+        assert (e = r)
+            report "wrong result: sqrt("
+                & natural'image(n) & ") => "
+                & natural'image(r) & " != "
+                & natural'image(e)
+            severity error;
+        wait for period;
+        start <= '0';
+    end procedure;
+begin
+    sequential_sqrt_inst : sequential_sqrt
+        generic map(n_bits => n_bits)
+        port map(
+            clk => clk, rst => rst, start => start, done => done,
+            data_in => data_in, data_out => data_out
+        );
+
+    clk_gen : process
+    begin
+        clk <= '1';
+        wait for period / 2;
+        clk <= '0';
+        wait for period / 2;
+    end process;
+
+    main : process
+    begin
+        rst <= '1';
+        start <= '0';
+        wait for period;
+        rst <= '0';
+
+        test(start, data_in, 4, data_out, 2);
 
         report "Test: ok" severity failure;
     end process;

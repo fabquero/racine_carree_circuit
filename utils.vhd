@@ -5,6 +5,8 @@ use ieee.std_logic_1164.all;
 package utils is
 	function clog2(n: natural) return natural;
 	function to_string(vec: std_logic_vector) return string;
+    function to_std_logic(cond: boolean) return std_logic;
+    function to_bool(sig: std_logic) return boolean;
 end package;
 
 package body utils is
@@ -24,5 +26,15 @@ package body utils is
             end if;
         end loop;
         return res;
+    end function;
+
+    function to_std_logic(cond: boolean) return std_logic is
+    begin
+        if cond then return '1'; else return '0'; end if;
+    end function;
+
+    function to_bool(sig: std_logic) return boolean is
+    begin
+        return sig = '1';
     end function;
 end package body;

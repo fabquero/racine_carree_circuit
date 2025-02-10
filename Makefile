@@ -1,7 +1,10 @@
 utils:=utils.vhd
-src:=$(utils) bit_adder.vhd signed_adder.vhd d_flip_flop.vhd data_register.vhd shift_register.vhd control_unit.vhd sequential_sqrt.vhd
+ctrl :=d_flip_flop.vhd data_register.vhd shift_register.vhd control_unit.vhd
+arith:=bit_adder.vhd signed_adder.vhd dataflow.vhd
+src:=$(utils) $(ctrl) $(arith) sequential_sqrt.vhd
+
 tb:=testbench
-uut:=signed_adder
+uut:=sequential_sqrt
 
 time?=-all
 gui-cmds:=vsim work.$(tb)($(uut)_tb);
@@ -18,7 +21,7 @@ tb: com
 sim: tb
 	vsim $(tb) -c -do "vsim work.$(tb)($(uut)_tb); run -all; quit";
 
-sim-gui: com
+sim-gui: tb
 	vsim $(tb) -do "$(gui-cmds)";
 
 clean:

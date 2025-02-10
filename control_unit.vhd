@@ -27,6 +27,9 @@ architecture structural of control_unit is
 
     -- 00: init; 01: computing; 10: done
     signal state, n_state: std_logic_vector(1 downto 0);
+    constant init_s: std_logic_vector(1 downto 0) := "00";
+    constant comp_s: std_logic_vector(1 downto 0) := "01";
+    constant done_s: std_logic_vector(1 downto 0) := "10";
     
     -- shift register for computation state
     component shift_register
@@ -44,17 +47,17 @@ begin
     -- sequential state update
     state_reg : data_register
     generic map(n_bits => 2)
-    port    map(
+    port map(
         clk => clk, rst => rst, ena => '1',
         D => n_state, Q => state
     );
 
     -- computation state counter
-    sr_rst <= '1' when (state ="10") or (rst = '1') else '0';
+    sr_ena <= to_std_logic(state = init_s);
+    sr_rst <= to_std_logic(state = done_s or rst = '1');
     sr_in  <= (n_bits - 1 downto 1 => '0') & '1';
-    sr_ena <= '1' when state = "00" else '0';
-
-    sr : shift_register
+    
+    shift_reg : shift_register
     generic map(n_bits => n_bits)
     port map(
         clk => clk, rst => sr_rst, ena => sr_ena,
@@ -62,27 +65,30 @@ begin
     );
 
     -- next state computation
-    process(state, start) is
+    process(state, start, sr_out) is
     begin
         if start = '0' then -- stay stuck at init if state isn't on
-            n_state <= "00";
+            n_state <= init_s;
         else
-            n_state <= state;
             case state is
-                when "00" =>
-                    n_state <= "01";
-                when "01" =>
+                when init_s =>
+                    n_state <= comp_s;
+                when comp_s =>
                     if sr_out = '1' then
-                        n_state <= "10";
+                        n_state <= done_s;
+                    else
+                        n_state <= comp_s;
                     end if;
+                when done_s =>
+                    n_state <= done_s;
                 when others =>
-                    n_state <= "00";
+                    n_state <= init_s;
             end case;
         end if;
     end process;
 
     -- output
-    done    <= '1' when state = "10"                else '0';
-    reg_rst <= '1' when rst   = '1'  or start = '0' else '0';
-    reg_ena <= '0' when state = "10"                else '1';
+    done    <= state(1);
+    reg_rst <= rst;
+    reg_ena <= not rst and not state(1);
 end architecture;
