@@ -385,6 +385,78 @@ begin
     end process;
 end architecture;
 
+architecture dataflow_tb of testbench is
+    constant period: time := 20 ns;
+    constant n_bits: natural := 2;
+
+    component dataflow
+        generic(n_bits: natural);
+        port(
+            D_in : in  std_logic_vector(2 * n_bits - 1 downto 0);
+            R_in : in  std_logic_vector(3 + n_bits - 1 downto 0);
+            Z_in : in  std_logic_vector(    n_bits - 1 downto 0);
+    
+            D_out: out std_logic_vector(2 * n_bits - 1 downto 0);
+            R_out: out std_logic_vector(3 + n_bits - 1 downto 0);
+            Z_out: out std_logic_vector(    n_bits - 1 downto 0)
+        );
+    end component;
+
+    signal D_in, D_out: std_logic_vector(2 * n_bits - 1 downto 0);
+    signal R_in, R_out: std_logic_vector(3 + n_bits - 1 downto 0);
+    signal Z_in, Z_out: std_logic_vector(    n_bits - 1 downto 0);
+
+    procedure test(
+        signal   D_in     : inout std_logic_vector(2 * n_bits - 1 downto 0);
+        constant D_in_val : in    std_logic_vector(2 * n_bits - 1 downto 0);
+        signal   D_out    : in    std_logic_vector(2 * n_bits - 1 downto 0);
+        constant D_out_val: in    std_logic_vector(2 * n_bits - 1 downto 0);
+
+        signal   R_in     : inout std_logic_vector(3 + n_bits - 1 downto 0);
+        constant R_in_val : in    std_logic_vector(3 + n_bits - 1 downto 0);
+        signal   R_out    : in    std_logic_vector(3 + n_bits - 1 downto 0);
+        constant R_out_val: in    std_logic_vector(3 + n_bits - 1 downto 0);
+
+        signal   Z_in     : inout std_logic_vector(    n_bits - 1 downto 0);
+        constant Z_in_val : in    std_logic_vector(    n_bits - 1 downto 0);
+        signal   Z_out    : in    std_logic_vector(    n_bits - 1 downto 0);
+        constant Z_out_val: in    std_logic_vector(    n_bits - 1 downto 0)
+    ) is
+    begin
+        D_in <= D_in_val;    
+        R_in <= R_in_val;
+        Z_in <= Z_in_val;
+        wait for period;
+        assert D_out = D_out_val and R_out = R_out_val and Z_out = Z_out_val
+            report "wrong result: ("
+                & to_string(D_in_val)  & ","
+                & to_string(R_in_val)  & ","
+                & to_string(Z_in_val)  & ") => ("
+                & to_string(D_out) & ","
+                & to_string(R_out) & ","
+                & to_string(Z_out) & ") != ("
+                & to_string(D_out_val) & ","
+                & to_string(R_out_val) & ","
+                & to_string(Z_out_val) & ")"
+            severity error;
+    end procedure;
+begin
+    dataflow_inst : dataflow
+        generic map (n_bits => n_bits)
+        port map(
+            D_in => D_in, D_out => D_out,
+            R_in => R_in, R_out => R_out,
+            Z_in => Z_in, Z_out => Z_out
+        );
+
+    main : process
+    begin
+        test(D_in, "0100", D_out, "0000",R_in, "00000", R_out, "00000",Z_in, "00", Z_out, "01");
+
+        report "Test: ok" severity failure;
+    end process;
+end architecture;
+
 architecture sequential_sqrt_tb of testbench is
     constant period: time := 20 ns;
     constant n_bits: natural := 2;
