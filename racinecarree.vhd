@@ -1,10 +1,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.math_utils.all;
 
 entity racinecarree is
-    generic(n_bits: natural);
+    generic(n_bits: natural := 32);
 	port(
 		clk  : in std_logic;
 		rst  : in std_logic;
