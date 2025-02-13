@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.math_real.all;
 
 library std;
 use std.textio.all;
@@ -469,7 +470,7 @@ end architecture;
 
 architecture sequential_sqrt_tb of testbench is
     constant period: time := 20 ns;
-    constant n_bits: natural := 2;
+    constant n_bits: natural := 16;
 
     component sequential_sqrt
         generic(n_bits: natural);
@@ -506,8 +507,33 @@ architecture sequential_sqrt_tb of testbench is
                 & natural'image(r) & " != "
                 & natural'image(e)
             severity error;
-        wait for period;
         start <= '0';
+        wait for period;
+    end procedure;
+
+    procedure test(
+        signal   start   : out std_logic;
+        signal   data_in : out std_logic_vector(2 * n_bits - 1 downto 0);
+        constant n       : in  unsigned        (2 * n_bits - 1 downto 0);
+        signal   data_out: in  std_logic_vector(    n_bits - 1 downto 0);
+        constant e       : in  natural
+    ) is
+        variable r: natural;
+    begin
+        start <= '0';
+        data_in <= std_logic_vector(n);
+        wait for period;
+        start <= '1';
+        wait until done = '1';
+        r := to_integer(unsigned(data_out));
+        assert (e = r)
+            report "wrong result: sqrt("
+                & to_string(std_logic_vector(n)) & ") => "
+                & natural'image(r) & " != "
+                & natural'image(e)
+            severity error;
+        start <= '0';
+        wait for period;
     end procedure;
 begin
     sequential_sqrt_inst : sequential_sqrt
@@ -532,7 +558,14 @@ begin
         wait for period;
         rst <= '0';
 
-        test(start, data_in, 4, data_out, 2);
+        test(start, data_in, 0,  data_out, 0);
+        test(start, data_in, 1,  data_out, 1);
+        test(start, data_in, 3,  data_out, 1);
+        test(start, data_in, 4,  data_out, 2);
+        test(start, data_in, 16, data_out, 4);
+        test(start, data_in, 512, data_out, integer(floor(sqrt(real(512)))));
+        test(start, data_in, 1194877489, data_out, integer(floor(sqrt(real(1194877489)))));
+        test(start, data_in, (2 * n_bits - 1 downto 0 => '1'), data_out, 65535);
 
         report "Test: ok" severity failure;
     end process;

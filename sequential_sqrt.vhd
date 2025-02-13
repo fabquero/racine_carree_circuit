@@ -8,7 +8,7 @@ entity sequential_sqrt is
 		clk, rst, start: in  std_logic;
 		done           : out std_logic;
 		data_in        : in  std_logic_vector(2 * n_bits - 1 downto 0);
-		data_out       : out std_logic_vector(n_bits -1 downto 0)
+		data_out       : out std_logic_vector(    n_bits - 1 downto 0)
 	);
 end entity;
 
@@ -27,7 +27,12 @@ architecture structural of sequential_sqrt is
 		);
 	end component;
 
-	-- previous and next data values relative to the computation module
+	-- dataflow input and ouputs
+	signal D_in, D_out: std_logic_vector(2 * n_bits - 1 downto 0);
+	signal R_in, R_out: std_logic_vector(3 + n_bits - 1 downto 0);
+	signal Z_in, Z_out: std_logic_vector(    n_bits - 1 downto 0);
+
+	-- previous and next register values (!= dataflow IO in certain states)
 	signal p_D, n_D: std_logic_vector(2 * n_bits - 1 downto 0);
 	signal p_R, n_R: std_logic_vector(3 + n_bits - 1 downto 0);
 	signal p_Z, n_Z: std_logic_vector(    n_bits - 1 downto 0);
@@ -43,7 +48,7 @@ architecture structural of sequential_sqrt is
 	end component;
 
 	-- data register control signals
-	signal reg_ena, reg_rst: std_logic;
+	signal done_sig, reg_ena, reg_rst: std_logic;
 
 	-- dataflow control state machine
 	component control_unit
@@ -59,8 +64,9 @@ begin
 	df : dataflow
 		generic map(n_bits => n_bits)
 		port    map(
-					D_in => p_D, R_in => p_R, Z_in => p_Z,
-					D_out => n_D, R_out => n_R, Z_out => n_Z
+					D_in => D_in, D_out => D_out,					
+					R_in => R_in, R_out => R_out,			
+					Z_in => Z_in, Z_out => Z_out		
 				);
 
 	-- registers ---------------------------------------------------------------
@@ -92,7 +98,22 @@ begin
 	cu : control_unit
 		generic map(n_bits => n_bits)
 		port    map(
-					clk => clk, rst => rst, start => start, done => done,
+					clk => clk, rst => rst, start => start, done => done_sig,
 					reg_rst => reg_rst, reg_ena => reg_ena
 				);
+
+	-- input/output ------------------------------------------------------------
+	-- reg values go into the dataflow
+	D_in <= p_D;
+	R_in <= p_R;
+	Z_in <= p_Z;
+
+	-- dataflow values only go in the res during computation
+	n_D  <= D_out when start = '1' and done_sig = '0' else data_in;
+	n_R  <= R_out when start = '1' and done_sig = '0' else (others => '0');
+	n_Z  <= Z_out when start = '1' and done_sig = '0' else (others => '0');
+	
+	-- who let the sig out
+	data_out <= n_Z;
+	done     <= done_sig;
 end architecture;
