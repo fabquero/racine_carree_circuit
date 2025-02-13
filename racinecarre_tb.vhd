@@ -56,8 +56,19 @@ architecture behavior of racinecarre_tb is
             --test qu'on a bien 2^5 = 32
             -- 00000000000000000000000000000011
            assert Result = "00000000000000000000000000010110" report "Erreur, ce n'est pas la valeur 22, la valeur donnee est :" & (integer'image(to_integer(unsigned(A)))) & " mais la valeur " & (integer'image(to_integer(unsigned(Result)))) & " est trouvee !" severity failure;
+
+        start <= '0';
+        wait for clock_period;
+        -- test la limite de la valeur
+        A <= "0000000000000000000000000000000011111111111111111111111111111111";
+        wait for clock_period;
+        start <= '1';
+        wait until done'event and done = '1';
+           --test qu'on a bien 2^5 = 32
+           -- 00000000000000000000000000000011
+            assert Result = "00000000000000001111111111111111" report "Erreur, ce n'est pas la valeur 65535, la valeur donnee est :" & (integer'image(to_integer(unsigned(A)))) & " mais la valeur " & (integer'image(to_integer(unsigned(Result)))) & " est trouvee !" severity failure;
            --assert Result = "11" report "Erreur, ce n'est pas la valeur 3" severity failure;
-           report "Test Done." severity failure ;
+            report "Test Done." severity failure ;
     end process;
 
 
