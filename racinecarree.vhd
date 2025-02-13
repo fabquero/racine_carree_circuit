@@ -53,10 +53,8 @@ architecture arch of racinecarree is
                             -- calcul de la racine carree
                             if R >= to_signed(0, 3 + n_bits) then
                                 R := (R sll 2) + ('0'&signed(std_logic_vector(D(2*n_bits - 1 downto 2*n_bits-2)))) - signed(std_logic_vector((Z sll 2))) - to_signed(1, 3 + n_bits);
-                                --R <= (R sll 2) + to_unsigned((D srl (2*n_bits-2)), 2*n_bits-1) - (Z sll 2) - to_unsigned(1, 3 + n_bits);
                             else
                                 R := (R sll 2) + ('0'&signed(std_logic_vector(D(2*n_bits - 1 downto 2*n_bits-2)))) + signed(std_logic_vector(Z sll 2)) + to_signed(3, 3 + n_bits);
-                                --R <= (R sll 2) + to_unsigned((D srl (2*n_bits-2)), 2*n_bits-1) - (Z sll 2) + to_unsigned(3, 3 + n_bits);
                             end if;
                             if R >= to_signed(0, 3 + n_bits) then
                                 -- car unsigned implemente l'addition. On pourrait faire la meme chose avec signed mais pour les expliquations, on va le faire avec la fonction to_signed.
@@ -70,11 +68,12 @@ architecture arch of racinecarree is
                             if i_step = n_bits then
                                 state <= END_COMP;
                             end if;
-                            
                     when END_COMP =>
-                        data_out <= std_logic_vector(Z);
-                        done <= '1';
-                        state <= IDLE;
+                	    data_out <= std_logic_vector(Z);
+                            done <= '1';
+                            if start = '0' then
+                                state <= IDLE;
+                            end if;
                 end case;
             end if;
         end process comport;
