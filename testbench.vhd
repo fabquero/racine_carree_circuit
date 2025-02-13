@@ -387,7 +387,7 @@ end architecture;
 
 architecture dataflow_tb of testbench is
     constant period: time := 20 ns;
-    constant n_bits: natural := 2;
+    constant n_bits: natural := 4;
 
     component dataflow
         generic(n_bits: natural);
@@ -451,7 +451,17 @@ begin
 
     main : process
     begin
-        test(D_in, "0100", D_out, "0000",R_in, "00000", R_out, "00000",Z_in, "00", Z_out, "01");
+        -- sqrt(4)
+        test(D_in, "00000100", D_out, "00010000", R_in, "0000000", R_out, "1111111", Z_in, "0000", Z_out, "0000");
+        test(D_in, "00010000", D_out, "01000000", R_in, "1111111", R_out, "1111111", Z_in, "0000", Z_out, "0000");
+        test(D_in, "01000000", D_out, "00000000", R_in, "1111111", R_out, "0000000", Z_in, "0000", Z_out, "0001");
+        test(D_in, "00000000", D_out, "00000000", R_in, "0000000", R_out, "1111011", Z_in, "0001", Z_out, "0010");
+
+        -- sqrt(3)
+        test(D_in, "00000011", D_out, "00001100", R_in, "0000000", R_out, "1111111", Z_in, "0000", Z_out, "0000");
+        test(D_in, "00001100", D_out, "00110000", R_in, "1111111", R_out, "1111111", Z_in, "0000", Z_out, "0000");
+        test(D_in, "00110000", D_out, "11000000", R_in, "1111111", R_out, "1111111", Z_in, "0000", Z_out, "0000");
+        test(D_in, "11000000", D_out, "00000000", R_in, "1111111", R_out, "0000010", Z_in, "0000", Z_out, "0001");
 
         report "Test: ok" severity failure;
     end process;
