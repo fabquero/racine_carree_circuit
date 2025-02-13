@@ -151,14 +151,35 @@ int main()
 	//printf("valeur obtenu pour intel: %u", time);
 
 	// SQUARE ROOT PART
-	uint16_t tabResult[NUMBER_OF_ELEMENTS] = {0};
+	//uint16_t tabResult[NUMBER_OF_ELEMENTS] = {0};
 	//uint16_t* modifiedTab = 0;
+
+	uint32_t tabSquared[NUMBER_OF_ELEMENTS] = {0};
+	uint16_t tabResultSquareRoot[NUMBER_OF_ELEMENTS] = {0};
+
+	  // on rempli un tableau de 200 element avec son carre
+	int i;
+	for (i = 0; i < NUMBER_OF_ELEMENTS; i++)
+	{
+		tabSquared[i] = i * i;
+	}
 
 	start_my_timestamp();
 	unsigned int t1 = my_timestamp();
 
 	//modifiedTab = applySquareRoot(tabResult);
-	applySquareRoot(tabResult);
+	//applySquareRoot(tabResult);
+	  int j = 0;
+	  for (j = 0; j < 100; j++){
+		  int k = 0;
+		  for (k = 0; k < NUMBER_OF_ELEMENTS; ++k) {
+			  tabResultSquareRoot[NUMBER_OF_ELEMENTS] = 0;
+		  }
+
+		  for (i = 0; i < NUMBER_OF_ELEMENTS; i++){
+			  tabResultSquareRoot[i] = nios_square(tabSquared[i]);
+		  }
+	  }
 
 	unsigned int t2 = my_timestamp();
 
@@ -169,7 +190,7 @@ int main()
 	}
 
 	//displayArray(modifiedTab,NUMBER_OF_ELEMENTS);
-	printf("value of t1 is %u and t2 is %u, then t1-t2 %u and mean for one value is %u", t1, t2, time, (time)/(100*200));
+	printf("value of t1 is %u and t2 is %u, then t1-t2 %u and mean for one value is %u.", t1, t2, time, (time)/(100*200));
 
 	while (1) LEDR = SW;
 	return 0;
