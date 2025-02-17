@@ -231,11 +231,12 @@ begin
 
         start <= '1';
         test(1, '0', '0', '1', "wrong value during computation (3)");
+        start <= '0';
         test(1, '0', '0', '1', "wrong value during computation (2)");
         test(1, '0', '0', '1', "wrong value during computation (1)");
         test(1, '0', '0', '1', "wrong value during computation (0)");
         test(1, '1', '0', '0', "wrong value after computation (result)");
-        test(1, '1', '0', '0', "wrong value after computation (hold)");
+        test(1, '0', '0', '1', "wrong value after computation (hold)");
 
         start <= '0';
         test(1, '0', '0', '1', "wrong transition from done_s to init_s");
@@ -495,10 +496,10 @@ architecture sequential_sqrt_tb of testbench is
     ) is
         variable r: natural;
     begin
-        start <= '0';
+        start <= '1';
         data_in <= std_logic_vector(to_unsigned(n, 2 * n_bits));
         wait for period;
-        start <= '1';
+        start <= '0';
         wait until done = '1';
         r := to_integer(unsigned(data_out));
         assert (e = r)
@@ -507,7 +508,6 @@ architecture sequential_sqrt_tb of testbench is
                 & natural'image(r) & " != "
                 & natural'image(e)
             severity error;
-        start <= '0';
         wait for period;
     end procedure;
 
@@ -520,10 +520,10 @@ architecture sequential_sqrt_tb of testbench is
     ) is
         variable r: natural;
     begin
-        start <= '0';
+        start <= '1';
         data_in <= std_logic_vector(n);
         wait for period;
-        start <= '1';
+        start <= '0';
         wait until done = '1';
         r := to_integer(unsigned(data_out));
         assert (e = r)
@@ -532,7 +532,6 @@ architecture sequential_sqrt_tb of testbench is
                 & natural'image(r) & " != "
                 & natural'image(e)
             severity error;
-        start <= '0';
         wait for period;
     end procedure;
 begin
