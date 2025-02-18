@@ -500,6 +500,7 @@ architecture sequential_sqrt_tb of testbench is
         wait for period;
         start <= '1';
         wait until done = '1';
+        wait for period;
         r := to_integer(unsigned(data_out));
         assert (e = r)
             report "wrong result: sqrt("
@@ -525,6 +526,7 @@ architecture sequential_sqrt_tb of testbench is
         wait for period;
         start <= '1';
         wait until done = '1';
+        wait for period;
         r := to_integer(unsigned(data_out));
         assert (e = r)
             report "wrong result: sqrt("

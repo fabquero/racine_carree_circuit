@@ -114,6 +114,6 @@ begin
 	n_Z  <= Z_out when start = '1' and done_sig = '0' else (others => '0');
 	
 	-- who let the sig out
-	data_out <= n_Z;
+	data_out <= p_Z;
 	done     <= done_sig;
 end architecture;
