@@ -2,17 +2,17 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity sequential_sqrt is
-	generic(n_bits: natural);
+entity nios_sequential_sqrt is
+	generic(n_bits: natural := 32);
 	port(
-		clk, rst, start: in  std_logic;
-		done           : out std_logic;
-		data_in        : in  std_logic_vector(2 * n_bits - 1 downto 0);
-		data_out       : out std_logic_vector(    n_bits - 1 downto 0)
+		clk, clk_en, reset, start: in  std_logic;
+		done  : out std_logic;
+		dataa : in  std_logic_vector(2 * n_bits - 1 downto 0);
+		result: out std_logic_vector(2 * n_bits - 1 downto 0)
 	);
 end entity;
 
-architecture structural of sequential_sqrt is
+architecture structural of nios_sequential_sqrt is
 	-- combinatorial computation module
 	component dataflow
 		generic(n_bits: natural);
@@ -98,7 +98,7 @@ begin
 	cu : control_unit
 		generic map(n_bits => n_bits)
 		port    map(
-					clk => clk, rst => rst, start => start, done => done_sig,
+					clk => clk, rst => reset, start => start, done => done_sig,
 					reg_rst => reg_rst, reg_ena => reg_ena
 				);
 
@@ -109,11 +109,11 @@ begin
 	Z_in <= p_Z;
 
 	-- dataflow values only go in the res during computation
-	n_D  <= D_out when start = '0' else data_in;
-	n_R  <= R_out when start = '0' else (others => '0');
-	n_Z  <= Z_out when start = '0' else (others => '0');
+	n_D  <= (others => '0') when clk_en = '0' else D_out when start = '0' else dataa;
+	n_R  <= (others => '0') when clk_en = '0' else R_out when start = '0' else (others => '0');
+	n_Z  <= (others => '0') when clk_en = '0' else Z_out when start = '0' else (others => '0');
 	
 	-- who let the sig out
-	data_out <= n_Z;
-	done     <= done_sig;
+	result <= (others => '0') when clk_en = '0' else (2 * n_bits - 1 downto n_bits => '0') & p_Z;
+	done   <= '0' when clk_en = '0' else done_sig;
 end architecture;

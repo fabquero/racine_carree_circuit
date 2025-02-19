@@ -473,25 +473,25 @@ architecture sequential_sqrt_tb of testbench is
     constant period: time := 20 ns;
     constant n_bits: natural := 16;
 
-    component sequential_sqrt
+    component nios_sequential_sqrt
         generic(n_bits: natural);
         port(
-            clk, rst, start: in  std_logic;
-            done           : out std_logic;
-            data_in        : in  std_logic_vector(2 * n_bits - 1 downto 0);
-            data_out       : out std_logic_vector(    n_bits - 1 downto 0)
+            clk, clk_en, reset, start: in  std_logic;
+            done  : out std_logic;
+            dataa : in  std_logic_vector(2 * n_bits - 1 downto 0);
+            result: out std_logic_vector(2 * n_bits - 1 downto 0)
         );
     end component;
 
-    signal clk, rst, start, done: std_logic;
-    signal data_in : std_logic_vector(2 * n_bits - 1 downto 0);
-    signal data_out: std_logic_vector(    n_bits - 1 downto 0);
+    signal clk, clk_en, rst, start, done: std_logic;
+    signal dataa : std_logic_vector(2 * n_bits - 1 downto 0);
+    signal result: std_logic_vector(2 * n_bits - 1 downto 0);
 
     procedure test(
         signal   start   : out std_logic;
         signal   data_in : out std_logic_vector(2 * n_bits - 1 downto 0);
         constant n       : in  natural;
-        signal   data_out: in  std_logic_vector(    n_bits - 1 downto 0);
+        signal   data_out: in  std_logic_vector(2 * n_bits - 1 downto 0);
         constant e       : in  natural
     ) is
         variable r: natural;
@@ -501,7 +501,7 @@ architecture sequential_sqrt_tb of testbench is
         wait for period;
         start <= '0';
         wait until done = '1';
-        r := to_integer(unsigned(data_out));
+        r := to_integer(unsigned(data_out(n_bits - 1 downto 0)));
         assert (e = r)
             report "wrong result: sqrt("
                 & natural'image(n) & ") => "
@@ -515,7 +515,7 @@ architecture sequential_sqrt_tb of testbench is
         signal   start   : out std_logic;
         signal   data_in : out std_logic_vector(2 * n_bits - 1 downto 0);
         constant n       : in  unsigned        (2 * n_bits - 1 downto 0);
-        signal   data_out: in  std_logic_vector(    n_bits - 1 downto 0);
+        signal   data_out: in  std_logic_vector(2 * n_bits - 1 downto 0);
         constant e       : in  natural
     ) is
         variable r: natural;
@@ -525,7 +525,7 @@ architecture sequential_sqrt_tb of testbench is
         wait for period;
         start <= '0';
         wait until done = '1';
-        r := to_integer(unsigned(data_out));
+        r := to_integer(unsigned(data_out(n_bits - 1 downto 0)));
         assert (e = r)
             report "wrong result: sqrt("
                 & to_string(std_logic_vector(n)) & ") => "
@@ -535,11 +535,11 @@ architecture sequential_sqrt_tb of testbench is
         wait for period;
     end procedure;
 begin
-    sequential_sqrt_inst : sequential_sqrt
+    nios_sequential_sqrt_inst : nios_sequential_sqrt
         generic map(n_bits => n_bits)
         port map(
-            clk => clk, rst => rst, start => start, done => done,
-            data_in => data_in, data_out => data_out
+            clk => clk, clk_en => clk_en, reset => rst, start => start, done => done,
+            dataa => dataa, result => result
         );
 
     clk_gen : process
@@ -553,18 +553,28 @@ begin
     main : process
     begin
         rst <= '1';
+        clk_en <= '1';
         start <= '0';
         wait for period;
         rst <= '0';
 
-        test(start, data_in, 0,  data_out, 0);
-        test(start, data_in, 1,  data_out, 1);
-        test(start, data_in, 3,  data_out, 1);
-        test(start, data_in, 4,  data_out, 2);
-        test(start, data_in, 16, data_out, 4);
-        test(start, data_in, 512, data_out, integer(floor(sqrt(real(512)))));
-        test(start, data_in, 1194877489, data_out, integer(floor(sqrt(real(1194877489)))));
-        test(start, data_in, (2 * n_bits - 1 downto 0 => '1'), data_out, 65535);
+        test(start, dataa, 0,  result, 0);
+        test(start, dataa, 1,  result, 1);
+        test(start, dataa, 3,  result, 1);
+        test(start, dataa, 4,  result, 2);
+        test(start, dataa, 16, result, 4);
+        test(start, dataa, 512, result, integer(floor(sqrt(real(512)))));
+        test(start, dataa, 1194877489, result, integer(floor(sqrt(real(1194877489)))));
+        test(start, dataa, (2 * n_bits - 1 downto 0 => '1'), result, 65535);
+
+        clk_en <= '0';
+        start <= '1';
+        for i in 0 to 33 loop
+            wait for period;
+            assert done = '0'
+                report "low clk_en doesn't disable moddule"
+                severity error;
+        end loop;
 
         report "Test: ok" severity failure;
     end process;
