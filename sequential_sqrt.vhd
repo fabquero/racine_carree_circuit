@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 entity nios_sequential_sqrt is
 	generic(n_bits: natural := 32);
 	port(
-		clk, clk_en, reset, start: in  std_logic;
+		clk, clk_en, n_reset, start: in  std_logic;
 		done  : out std_logic;
 		dataa : in  std_logic_vector(2 * n_bits - 1 downto 0);
 		result: out std_logic_vector(2 * n_bits - 1 downto 0)
@@ -48,7 +48,7 @@ architecture structural of nios_sequential_sqrt is
 	end component;
 
 	-- data register control signals
-	signal done_sig, reg_ena, reg_rst: std_logic;
+	signal done_sig, reg_ena, reg_rst, reset: std_logic;
 
 	-- dataflow control state machine
 	component control_unit
@@ -60,6 +60,8 @@ architecture structural of nios_sequential_sqrt is
 		);
 	end component;
 begin
+	reset <= not n_reset;
+
 	-- dataflow ----------------------------------------------------------------
 	df : dataflow
 		generic map(n_bits => n_bits)

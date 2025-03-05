@@ -476,14 +476,14 @@ architecture sequential_sqrt_tb of testbench is
     component nios_sequential_sqrt
         generic(n_bits: natural);
         port(
-            clk, clk_en, reset, start: in  std_logic;
+            clk, clk_en, n_reset, start: in  std_logic;
             done  : out std_logic;
             dataa : in  std_logic_vector(2 * n_bits - 1 downto 0);
             result: out std_logic_vector(2 * n_bits - 1 downto 0)
         );
     end component;
 
-    signal clk, clk_en, rst, start, done: std_logic;
+    signal clk, clk_en, n_rst, start, done: std_logic;
     signal dataa : std_logic_vector(2 * n_bits - 1 downto 0);
     signal result: std_logic_vector(2 * n_bits - 1 downto 0);
 
@@ -538,7 +538,7 @@ begin
     nios_sequential_sqrt_inst : nios_sequential_sqrt
         generic map(n_bits => n_bits)
         port map(
-            clk => clk, clk_en => clk_en, reset => rst, start => start, done => done,
+            clk => clk, clk_en => clk_en, n_reset => n_rst, start => start, done => done,
             dataa => dataa, result => result
         );
 
@@ -552,11 +552,11 @@ begin
 
     main : process
     begin
-        rst <= '1';
+        n_rst <= '0';
         clk_en <= '1';
         start <= '0';
         wait for period;
-        rst <= '0';
+        n_rst <= '1';
 
         test(start, dataa, 0,  result, 0);
         test(start, dataa, 1,  result, 1);
