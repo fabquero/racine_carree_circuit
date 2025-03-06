@@ -495,10 +495,10 @@ architecture sequential_sqrt_tb of testbench is
     ) is
         variable r: natural;
     begin
-        start <= '0';
+        start <= '1';
         data_in <= std_logic_vector(to_unsigned(n, 2 * n_bits));
         wait for period;
-        start <= '1';
+        start <= '0';
         wait until done = '1';
         wait for period;
         r := to_integer(unsigned(data_out));
@@ -508,8 +508,6 @@ architecture sequential_sqrt_tb of testbench is
                 & natural'image(r) & " != "
                 & natural'image(e)
             severity error;
-        start <= '0';
-        wait for period;
     end procedure;
 
     procedure test(
@@ -521,10 +519,10 @@ architecture sequential_sqrt_tb of testbench is
     ) is
         variable r: natural;
     begin
-        start <= '0';
+        start <= '1';
         data_in <= std_logic_vector(n);
         wait for period;
-        start <= '1';
+        start <= '0';
         wait until done = '1';
         wait for period;
         r := to_integer(unsigned(data_out));
@@ -534,8 +532,6 @@ architecture sequential_sqrt_tb of testbench is
                 & natural'image(r) & " != "
                 & natural'image(e)
             severity error;
-        start <= '0';
-        wait for period;
     end procedure;
 begin
     sequential_sqrt_inst : sequential_sqrt

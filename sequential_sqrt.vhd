@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity sequential_sqrt is
-	generic(n_bits: natural);
+	generic(n_bits: natural := 16);
 	port(
 		clk, rst, start: in  std_logic;
 		done           : out std_logic;
@@ -109,9 +109,9 @@ begin
 	Z_in <= p_Z;
 
 	-- dataflow values only go in the res during computation
-	n_D  <= D_out when start = '1' and done_sig = '0' else data_in;
-	n_R  <= R_out when start = '1' and done_sig = '0' else (others => '0');
-	n_Z  <= Z_out when start = '1' and done_sig = '0' else (others => '0');
+	n_D  <= D_out when start = '0' else data_in;
+	n_R  <= R_out when start = '0' else (others => '0');
+	n_Z  <= Z_out when start = '0' else (others => '0');
 	
 	-- who let the sig out
 	data_out <= p_Z;
