@@ -2,6 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity d_flip_flop is
+    generic(
+        reset_value: std_logic := '0'
+    );
     port(
         clk, rst, D: in  std_logic;
         Q: out std_logic

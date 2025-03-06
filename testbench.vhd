@@ -568,3 +568,137 @@ begin
         report "Test: ok" severity failure;
     end process;
 end architecture;
+
+architecture avalon_sqrt_tb of testbench is
+    constant period: time := 20 ns;
+    signal clk, rst, read, write, waitrequest: std_logic;
+    signal wdata, rdata: std_logic_vector(31 downto 0);
+
+    component avalon_sqrt
+        port (
+            clk,  rst  : in  std_logic;
+            read, write: in  std_logic;
+            wdata      : in  std_logic_vector(31 downto 0);
+            rdata      : out std_logic_vector(31 downto 0);
+            waitrequest: out std_logic
+        );
+    end component;
+
+    -- tests the computation of the sqrt of wdata_val using avalon
+    procedure test(
+        signal   write_sig, read_sig: out std_logic;
+        signal   waitrequest_sig    : in  std_logic;
+        signal   wdata_sig: out std_logic_vector(31 downto 0);
+        constant wdata_val: in  std_logic_vector(31 downto 0);
+        signal   rdata_sig: in  std_logic_vector(31 downto 0);
+        constant rdata_val: in  std_logic_vector(31 downto 0)
+    ) is
+    begin
+        wait for period;
+        assert waitrequest = '1'
+            report "waitrequest not at 1 before transfers"
+            severity error;
+        wait for period;
+
+        -- write transfer
+        write_sig <= '1';
+        wdata_sig <= std_logic_vector(wdata_val);
+        wait for period;
+
+        assert waitrequest_sig = '0'
+            report "waitrequest blocks write transfer"
+            severity error;
+        
+        write_sig <= '0';
+
+        wait for period;
+        assert waitrequest_sig = '1'
+            report "waitrequest not at 1 between transfers"
+            severity error;
+        wait for period;
+        
+        -- read transfer
+        read_sig <= '1';
+        wait until waitrequest_sig = '0';
+
+        wait for period/2;
+        assert rdata = rdata_val
+            report "rdata at wrong value after waitrequest reset: wdata = "
+                & to_string(wdata_val) & " => rdata = "
+                & to_string(rdata_sig) & " != "
+                & to_string(rdata_val)
+            severity error;
+        wait for period/2;
+
+        read_sig <= '0';
+
+        wait for period;
+        assert waitrequest_sig = '1'
+            report "waitrequest not at 1 after transfers"
+            severity error;
+        wait for period;
+    end procedure;
+begin
+    avalon_sqrt_inst : avalon_sqrt
+        port map(
+            clk => clk, rst => rst,
+            read => read, write => write,
+            wdata => wdata, rdata => rdata,
+            waitrequest => waitrequest
+        );
+
+    clk_gen : process
+    begin
+        clk <= '1';
+        wait for period / 2;
+        clk <= '0';
+        wait for period / 2;
+    end process;
+
+    main : process
+    begin
+        rst <= '1';
+        write <= '0'; read <= '0'; wdata <= (others => '0');
+        wait for period;
+        rst <= '0';
+        wait for period;
+
+        test(
+            write, read, waitrequest,
+            wdata, std_logic_vector(to_unsigned(4, 32)),
+            rdata, std_logic_vector(to_unsigned(2, 32))
+        );
+
+        test(
+            write, read, waitrequest,
+            wdata, std_logic_vector(to_unsigned(3, 32)),
+            rdata, std_logic_vector(to_unsigned(1, 32))
+        );
+
+        test(
+            write, read, waitrequest,
+            wdata, std_logic_vector(to_unsigned(16, 32)),
+            rdata, std_logic_vector(to_unsigned(4, 32))
+        );
+
+        -- read again to test result storage
+        read <= '1';
+
+        wait for period/2;
+        assert waitrequest = '0'
+            report "second read blocks instead of recovering stored result"
+            severity error;
+
+        assert rdata = std_logic_vector(to_unsigned(4,32))
+            report "rdata at wrong value after waitrequest reset: wdata = "
+                & to_string(std_logic_vector(to_unsigned(16,32))) & " => rdata = "
+                & to_string(rdata) & " != "
+                & to_string(std_logic_vector(to_unsigned(4,32)))
+            severity error;
+        wait for period/2;
+
+        read <= '0';
+
+        report "Test: ok" severity failure;
+    end process;
+end architecture;

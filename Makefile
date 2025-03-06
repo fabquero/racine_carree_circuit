@@ -1,10 +1,10 @@
 utils:=utils.vhd
 ctrl :=d_flip_flop.vhd data_register.vhd shift_register.vhd control_unit.vhd
 arith:=bit_adder.vhd signed_adder.vhd dataflow.vhd
-src:=$(utils) $(ctrl) $(arith) sequential_sqrt.vhd
+src:=$(utils) $(ctrl) $(arith) sequential_sqrt.vhd avalon_sqrt.vhd
 
 tb:=testbench
-uut:=sequential_sqrt
+uut:=avalon_sqrt
 
 time?=-all
 gui-cmds:=vsim work.$(tb)($(uut)_tb);
