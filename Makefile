@@ -4,7 +4,7 @@ arith:=bit_adder.vhd signed_adder.vhd dataflow.vhd
 src:=$(utils) $(ctrl) $(arith) sequential_sqrt.vhd
 
 tb:=testbench
-uut:=sequential_sqrt
+uut:=nios_sequential_sqrt
 
 time?=-all
 gui-cmds:=vsim work.$(tb)($(uut)_tb);

@@ -469,7 +469,7 @@ begin
     end process;
 end architecture;
 
-architecture sequential_sqrt_tb of testbench is
+architecture nios_sequential_sqrt_tb of testbench is
     constant period: time := 20 ns;
     constant n_bits: natural := 16;
 
