@@ -65,6 +65,7 @@ architecture arch of racinecarree is
                             D <= D sll 2;
                             -- avant je faisais une soustraction entre deux unsigned... ca n'a pas de sens.
                             i_step := i_step + 1;
+			    -- on fait n-1 etapes car i_step est une variable, et a donc pour valeur n à l'étape n-1.
                             if i_step = n_bits then
                                 state <= END_COMP;
                             end if;
