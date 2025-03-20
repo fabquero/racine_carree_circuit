@@ -3,14 +3,15 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity racinecarree is
-    generic(n_bits: natural := 32);
+    generic(n_bits: natural := 16);
 	port(
 		clk  : in std_logic;
+		clk_en  : in std_logic;
 		rst  : in std_logic;
 		start: in std_logic;
 		done : out std_logic;
 		data_in : in std_logic_vector(2 * n_bits - 1 downto 0);
-		data_out: out std_logic_vector(n_bits -1 downto 0)
+		data_out: out std_logic_vector(2 * n_bits -1 downto 0)
 	);
 end entity;
 
@@ -65,12 +66,11 @@ architecture arch of racinecarree is
                             D <= D sll 2;
                             -- avant je faisais une soustraction entre deux unsigned... ca n'a pas de sens.
                             i_step := i_step + 1;
-			    -- on fait n-1 etapes car i_step est une variable, et a donc pour valeur n à l'étape n-1.
                             if i_step = n_bits then
                                 state <= END_COMP;
                             end if;
                     when END_COMP =>
-                	    data_out <= std_logic_vector(Z);
+                	    data_out <=  (2 * n_bits - 1 downto n_bits => '0') & std_logic_vector(Z);
                             done <= '1';
                             if start = '0' then
                                 state <= IDLE;
