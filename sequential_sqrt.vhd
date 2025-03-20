@@ -98,7 +98,7 @@ begin
 	cu : control_unit
 		generic map(n_bits => n_bits)
 		port    map(
-					clk => clk, rst => rst, start => start, done => done_sig,
+					clk => clk, rst => rst, start => start, done => done,
 					reg_rst => reg_rst, reg_ena => reg_ena
 				);
 
@@ -115,5 +115,4 @@ begin
 	
 	-- who let the sig out
 	data_out <= p_Z;
-	done     <= done_sig;
 end architecture;
