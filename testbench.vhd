@@ -235,7 +235,8 @@ begin
         test(1, '0', '0', '1', "wrong value during computation (1)");
         test(1, '0', '0', '1', "wrong value during computation (0)");
         test(1, '1', '0', '0', "wrong value after computation (result)");
-        test(1, '1', '0', '0', "wrong value after computation (hold)");
+        -- test(1, '1', '0', '0', "wrong value after computation (hold)");
+        -- no longer true since the avalon interface
 
         start <= '0';
         test(1, '0', '0', '1', "wrong transition from done_s to init_s");
